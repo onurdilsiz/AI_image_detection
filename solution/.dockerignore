@@ -1,0 +1,10 @@
+# Keep the image small and within the 4 GB limit: never bake data or runtime
+# artifacts into the image (data/ is a read-only mount, artifacts/ a writable
+# mount at grading time).
+data/
+artifacts/
+*.log
+__pycache__/
+*.pyc
+.snowflake/
+.git/
