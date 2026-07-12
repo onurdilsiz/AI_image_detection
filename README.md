@@ -52,6 +52,27 @@ python predict.py            --timeout_seconds 600
 python train_augmented.py    --timeout_seconds 1800
 python predict_augmented.py  --timeout_seconds 600
 python explain.py                                      # Task 1.4 (optional, analysis)
+
+# Extras: calibration stability and robustness evaluation
+#
+# Two additional utilities help validate calibration stability and robustness
+# before submission. They reuse the prepared caches in `solution/artifacts/prepared`.
+#
+# - K-fold calibration stability: computes thresholds on the `calibration/`
+#   split via a `k`-fold split and reports per-fold thresholds + held-out
+#   metrics. Writes `artifacts/task02/kfold_calibration.json`.
+#
+#     ```bash
+#     python calibrate_kfold.py --k 5
+#     ```
+#
+# - Robustness curves evaluation: applies a wider set of perturbations at
+#   multiple severity levels to the `validation/` set and records recall/FPR
+#   under the deployed threshold. Writes `artifacts/task02/robustness_curves.json`.
+#
+#     ```bash
+#     python robustness_eval.py --levels 5
+#     ```
 ```
 
 Outputs land in:
@@ -74,11 +95,34 @@ cd solution
 docker build -t amls .
 
 # mount data read-only, let artifacts persist on the host:
+# docker run --rm --cpus 8 \
+#   -v "$PWD/data:/app/data:ro" \
+#   -v "$PWD/artifacts:/app/artifacts" \
+#   amls python clean.py --timeout_seconds 600
+
 docker run --rm --cpus 8 \
-  -v "$PWD/data:/app/data:ro" \
-  -v "$PWD/artifacts:/app/artifacts" \
+  -v "$PWD/data:/workspace/solution/data:ro" \  
+  -v "$PWD/artifacts:/workspace/solution/artifacts" \
   amls python clean.py --timeout_seconds 600
 # ...repeat for prepare / train / predict / train_augmented / predict_augmented
+```
+
+# Run extras in Docker (optional). Replace the inner `python` command as below:
+
+# K-fold calibration:
+```
+docker run --rm --cpus 8 \
+  -v "$PWD/data:/workspace/solution/data:ro" \
+  -v "$PWD/artifacts:/workspace/solution/artifacts" \
+  amls python calibrate_kfold.py --k 5
+```
+
+# Robustness curves:
+```
+docker run --rm --cpus 8 \
+  -v "$PWD/data:/workspace/solution/data:ro" \
+  -v "$PWD/artifacts:/workspace/solution/artifacts" \
+  amls python robustness_eval.py --levels 5
 ```
 
 ---

@@ -199,6 +199,89 @@ def augment_u8(img_u8: np.ndarray, rng: np.random.Generator) -> np.ndarray:
     return out
 
 
+def augment_extended_u8(img_u8: np.ndarray, rng: np.random.Generator,
+                         mode: str = "random", severity: float = 0.5) -> np.ndarray:
+    """Extended augmentations for robustness evaluation.
+
+    mode: one of {"random", "jpeg", "blur", "downscale", "noise",
+    "color_jitter", "crop", "rotate", "saltpepper", "combined"}.
+    severity: [0,1] scales the perturbation strength.
+    """
+    from PIL import Image, ImageFilter, ImageEnhance
+
+    im = Image.fromarray(img_u8)
+    h, w = img_u8.shape[0], img_u8.shape[1]
+    m = mode
+    if m == "random":
+        choices = ["jpeg", "blur", "downscale", "noise", "color_jitter",
+                   "crop", "rotate", "saltpepper"]
+        m = choices[int(rng.integers(0, len(choices)))]
+
+    def _clip_arr(a):
+        return np.clip(a, 0, 255).astype(np.uint8)
+
+    if m == "jpeg":
+        qmin, qmax = 20, 95
+        q = int(qmax - (qmax - qmin) * severity)
+        buf = io.BytesIO()
+        im.save(buf, format="JPEG", quality=q)
+        buf.seek(0)
+        out = np.asarray(Image.open(buf).convert("RGB"), dtype=np.uint8)
+    elif m == "blur":
+        radius = 0.5 + 4.5 * severity
+        out = np.asarray(im.filter(ImageFilter.GaussianBlur(radius=radius)),
+                         dtype=np.uint8)
+    elif m == "downscale":
+        f = 1.0 - 0.9 * severity  # 1.0 -> 0.1
+        s = max(8, int(round(h * f)))
+        small = im.resize((s, s), Image.BILINEAR)
+        out = np.asarray(small.resize((w, h), Image.BILINEAR), dtype=np.uint8)
+    elif m == "noise":
+        sigma = 1.0 + 50.0 * severity
+        noisy = img_u8.astype(np.float32) + rng.normal(0.0, sigma, img_u8.shape)
+        out = _clip_arr(noisy)
+    elif m == "color_jitter":
+        # brightness, contrast, saturation
+        b = 1.0 + (rng.normal() * 0.3) * severity
+        c = 1.0 + (rng.normal() * 0.3) * severity
+        s = 1.0 + (rng.normal() * 0.3) * severity
+        out_im = ImageEnhance.Brightness(im).enhance(b)
+        out_im = ImageEnhance.Contrast(out_im).enhance(c)
+        out_im = ImageEnhance.Color(out_im).enhance(s)
+        out = np.asarray(out_im, dtype=np.uint8)
+    elif m == "crop":
+        p = 0.0 + 0.4 * severity
+        crop_h = int(round(h * (1.0 - p)))
+        crop_w = int(round(w * (1.0 - p)))
+        top = int(rng.integers(0, h - crop_h + 1))
+        left = int(rng.integers(0, w - crop_w + 1))
+        cropped = im.crop((left, top, left + crop_w, top + crop_h))
+        out = np.asarray(cropped.resize((w, h), Image.BILINEAR), dtype=np.uint8)
+    elif m == "rotate":
+        angle = (-30.0 + 60.0 * severity) * (1.0 if rng.random() < 0.5 else -1.0)
+        out = np.asarray(im.rotate(angle, resample=Image.BILINEAR, expand=False),
+                         dtype=np.uint8)
+    elif m == "saltpepper":
+        amount = 0.001 + 0.09 * severity
+        arr = img_u8.copy().astype(np.float32)
+        n = int(arr.size * amount)
+        if n > 0:
+            idx = rng.integers(0, arr.shape[0] * arr.shape[1], size=n)
+            ys = idx // arr.shape[1]
+            xs = idx % arr.shape[1]
+            for y, x in zip(ys, xs):
+                arr[y, x, int(rng.integers(0, 3))] = 255 if rng.random() < 0.5 else 0
+        out = _clip_arr(arr)
+    else:  # combined: apply two random ops
+        a = augment_extended_u8(img_u8, rng, mode="random", severity=severity)
+        out = augment_extended_u8(a, rng, mode="random", severity=min(1.0, severity * 1.2))
+
+    if out.shape != img_u8.shape:
+        out = np.asarray(Image.fromarray(out).resize((w, h), Image.BILINEAR),
+                         dtype=np.uint8)
+    return out
+
+
 # ----------------------------------------------------------------------------
 # Leakage-safe engineered features (content / frequency / noise only)
 # ----------------------------------------------------------------------------

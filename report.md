@@ -74,6 +74,20 @@ the blend over 0.8 while staying inside the gate.
 on clean data, so we calibrate at a target of 0.17 (below the 20% cap) so the
 deployed validation FPR (0.192) stays under the gate.
 
+**K-fold calibration check.** A 5‑fold stability check on the `calibration/`
+split produced per-fold thresholds roughly in the range 0.58–0.62 (median ≈ 0.594).
+Most folds yield validation FPR ≤ 0.20 at their fold-specific threshold, but one
+fold exceeded 0.20 (≈0.211), showing modest sampling variability. This implies
+the chosen threshold is reasonable but close to the gate — consider a slightly
+more conservative threshold or K‑fold based aggregation for final deployment.
+
+K-fold check: a k-fold stability run is saved to `artifacts/task02/kfold_calibration.json`.
+Thresholds found per fold vary modestly (~0.58–0.62) and most held-out folds
+meet the 20% FPR gate; one fold in the run shows a held-out FPR slightly above
+20% (≈0.2115). This indicates small sampling variability in the calibration
+split and supports choosing a slightly more conservative threshold (or using
+the higher percentile of fold thresholds) to reduce operational risk.
+
 ![Task 1.2 — classical feature importance (red = spectral, blue = content)](solution/artifacts/task02/explain/feature_importance.png)
 
 ## 1.3 Augmentation and robustness (30 pts)
@@ -107,6 +121,40 @@ perturbations — is the augmentation-robust component, and the ensemble leans o
 The augmented calibration gap runs *conservative* (validation_augmented FPR lands
 below the calibration target), so here we calibrate at the full 20% budget to avoid
 leaving recall on the table — the mirror image of Task 2.
+
+**Robustness-curve summary.** Running broader perturbations at multiple
+severities reveals significant brittleness in several regimes. Key findings from
+`robustness_curves.json`:
+- JPEG / blur / downscale / crop: often increase recall but drive FPR well above
+  20% at moderate severities (FPRs commonly 0.5–0.9), meaning the model over-calls
+  AI under these corruptions.
+- Noise / salt-and-pepper: even modest noise levels can collapse recall (model
+  predicts many AIs as `real`), producing near-zero FPR but unacceptable recall.
+- Color jitter and rotation produce more moderate degradations; extreme color
+  jitter crosses the 20% FPR cap at highest severity.
+
+These curves show the calibration chosen on clean/augmented calibration sets does
+not guarantee safe operation under all realistic corruptions. Recommended next
+steps: expand augmentation during training to include the failing modes, and
+re-evaluate calibration with those augmentations (or adopt a conservative
+threshold derived from K‑fold aggregation).
+
+Robustness curves: `artifacts/task02/robustness_curves.json` records
+performance under a wider set of perturbations and severities. Summary:
+- Mild JPEG/blur/downscale/crop perturbations can dramatically increase FPR
+  (often well above 20%), indicating the model can produce many false positives
+  under common compressions/resize operations.
+- Additive noise and salt-and-pepper at higher severities tend to *collapse*
+  recall (the model predicts mostly `real`), producing near-zero FPR but very
+  low detection rates — a different failure mode where the detector becomes
+  overly conservative.
+- Combined perturbations reduce recall and often increase FPR, showing
+  non-linear degradation under multiple simultaneous corruptions.
+
+These results confirm the model's fragility to several realistic corruptions and
+justify (a) expanding augmentation during training, (b) using conservative
+calibration (e.g., k-fold informed thresholds), and (c) adding uncertainty/
+reject policies for deployed decisions.
 
 ## 1.4 Explainability (20 pts)
 
@@ -145,6 +193,25 @@ statistics; (e) **real-vs-AI** mean-saliency comparison. Figures are in
   clean-val at 0.197), so a distributional shift on the hidden holdout could push
   FPR over 20%. The from-scratch CPU budget limits CNN capacity/resolution; a larger
   or higher-resolution CNN would likely improve both operating points further.
+
+## Additional validation utilities
+
+To help quantify calibration stability and robustness, two analysis utilities are
+included in `solution/`:
+
+- `calibrate_kfold.py`: runs a k-fold stability check on the prepared
+  `calibration/` split, computing a threshold per fold and evaluating the held-
+  out metrics. Output: `artifacts/task02/kfold_calibration.json` (useful to
+  confirm the selected threshold is not brittle to sampling variation).
+
+- `robustness_eval.py`: applies a broader set of perturbations (JPEG, blur,
+  downscale, noise, color jitter, crop, rotate, salt-and-pepper, and combined)
+  at several severity levels to the `validation/` set, then records recall and
+  FPR under the deployed threshold. Output: `artifacts/task02/robustness_curves.json`.
+
+Both scripts are deterministic (fixed seed) and can be run natively or inside
+the Docker image; they are intended as pre-submission checks rather than part
+of the timed training pipeline.
 
 ## Pipeline
 
