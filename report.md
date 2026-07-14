@@ -98,7 +98,7 @@ gate**), the robust model trades raw recall for a *legitimate* ≤20% operating 
 
 ![Task 1.3 — feature importance after augmentation training (spectral share falls to 24.3%)](solution/artifacts/task03/explain/feature_importance.png)
 
-**Why augmentation is hard here (report-worthy).** Blur, JPEG and down-scaling
+**Why augmentation is hard here.** Blur, JPEG and down-scaling
 directly destroy the high-frequency spectral fingerprint that powers the Task 2
 classical model, so its augmented recall at FPR ≤ 20% falls from ~0.69 to ~0.48.
 The CNN — which learns lower-frequency spatial/content cues that survive these

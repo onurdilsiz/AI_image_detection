@@ -31,8 +31,7 @@ generalise. Two mitigations:
 
 ## Residual-spectrum fingerprint (the recall lever)
 GAN/diffusion generators leave periodic high-frequency artifacts from their up-sampling layers,
-while real images have a smooth, natural spectral fall-off (Frank et al. 2020; Bammey/Synthbuster
-2024; UGAD 2024). `common._residual_spectrum` isolates this: it takes the 2D FFT of the **noise
+while real images have a smooth, natural spectral fall-off. `common._residual_spectrum` isolates this: it takes the 2D FFT of the **noise
 residual** (gray minus a 3x3 box blur, a cheap high-pass), `log1p`s the power, then summarises it
 rotation-invariantly as a 16-bin radially-averaged "reduced spectrum" plus outer-annulus peakiness,
 outer-annulus std, and log-power kurtosis (+19 dims -> 51 total). It is leakage-safe (computed on

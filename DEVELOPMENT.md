@@ -117,7 +117,7 @@ This is where most of the effort went. The honest progression:
    single decisive change. The CNN went from mediocre/unstable to the strongest single model.
 3. **Breakthrough #2 — spectral feature engineering (web-researched).** AI/diffusion
    upsamplers leave **periodic high-frequency fingerprints**; real images have smooth
-   spectral falloff (Frank et al. 2020; Synthbuster/Bammey 2024; UGAD). We added a
+   spectral falloff. We added a
    **residual-spectrum FFT** feature block (FFT of `gray − 3×3 box blur`, log-power, 16
    radial bins + outer-annulus peak/std/kurtosis) plus **per-channel HF stats** (r/g/b outer
    mean + peak). Features grew `32 → 57` dims. All computed on post-resize pixels → leakage-safe.
