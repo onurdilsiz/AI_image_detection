@@ -75,8 +75,8 @@ docker build -t amls .
 
 # mount data read-only, let artifacts persist on the host:
 docker run --rm --cpus 8 \
-  -v "$PWD/data:/app/data:ro" \
-  -v "$PWD/artifacts:/app/artifacts" \
+  -v "$PWD/data:/workspace/solution/data:ro" \
+  -v "$PWD/artifacts:/workspace/solution/artifacts" \
   amls python clean.py --timeout_seconds 600
 # ...repeat for prepare / train / predict / train_augmented / predict_augmented
 ```
