@@ -50,8 +50,7 @@ inter-channel correlations, histogram entropy — and never width/height/bytes/
 aspect. The most important block is a **residual-spectrum fingerprint**: the FFT of
 the high-pass noise residual, summarised as a 16-bin radial spectrum plus
 peakiness/kurtosis, including per-channel terms. This targets the periodic
-high-frequency artefacts that GAN/diffusion up-samplers leave behind (Frank et al.
-2020; Bammey/Synthbuster 2024).
+high-frequency artefacts that GAN/diffusion up-samplers leave behind.
 
 **Two model families (≥2 required).**
 - *Classical:* LogisticRegression, GradientBoosting and **HistGradientBoosting**
@@ -130,7 +129,9 @@ statistics; (e) **real-vs-AI** mean-saliency comparison. Figures are in
 
 ![Task 1.4 — CNN saliency on TP/FP/TN/FN validation samples](solution/artifacts/task02/explain/saliency_montage.png)
 
-![Task 1.4 — occlusion sensitivity (left) and highest-confidence FP/FN examples (right)](solution/artifacts/task02/explain/fp_fn_examples.png)
+![Task 1.4 — occlusion sensitivity: red regions contribute most to P(ai)](solution/artifacts/task02/explain/occlusion.png)
+
+![Task 1.4 — highest-confidence FP/FN examples](solution/artifacts/task02/explain/fp_fn_examples.png)
 
 ## Reproducibility, limitations and risks
 
