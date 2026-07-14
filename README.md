@@ -6,8 +6,8 @@ Reproducible, **CPU-only, internet-free** ML pipeline that detects AI-generated 
 - **Task 1.2** (clean): recall_ai **0.808** @ FPR_real **0.192** (aim ≥ 0.80, cap ≤ 20%) ✅
 - **Task 1.3** (augmented): recall_ai **0.615** @ FPR_real **0.177** (aim ≥ 0.60, cap ≤ 20%) ✅
 
-> New here? Read [`DEVELOPMENT.md`](DEVELOPMENT.md) §0 ("Start here") for the full
-> onboarding path and the story behind every design decision.
+> You can read [`DEVELOPMENT.md`](DEVELOPMENT.md) §0 ("Start here") for the full
+> design decisions.
 
 ---
 
