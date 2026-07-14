@@ -16,7 +16,7 @@ them to ``artifacts/task0X/explain/``. Covers the four directions in the brief:
   4. **FP / FN analysis + real-vs-AI attention** - confusion breakdown, per-group
      feature means, example montages, and mean saliency magnitude for real vs AI.
 
-Explanations are reported *critically*: the accompanying ``summary.json`` and the
+Explanations are reported: the accompanying ``summary.json`` and the
 printed discussion flag where the evidence looks like a genuine content cue vs a
 spectral shortcut that augmentation (Task 1.3) can erase.
 """
@@ -37,7 +37,7 @@ import common as C
 from common import Deadline, compute_metrics, FEATURE_NAMES
 
 
-# Indices of the spectral / high-frequency feature block (Task 1.2 fingerprint).
+# Indices of the spectral / high-frequency feature block
 def _spectral_mask():
     mask = np.zeros(len(FEATURE_NAMES), dtype=bool)
     for i, nm in enumerate(FEATURE_NAMES):
@@ -117,8 +117,8 @@ def explain_feature_importance(model, X_scaled, y, out_dir, summary):
         imp = np.abs(np.asarray(model.coef_, dtype=np.float64)).ravel()
         kind = "abs(logistic coefficient)"
     else:
-        # Model-agnostic fallback (e.g. HistGradientBoosting): permutation
-        # importance by drop in ROC-AUC when each feature is shuffled.
+        # Model-agnostic fallback: permutation importance
+        # by drop in ROC-AUC when each feature is shuffled.
         try:
             from sklearn.inspection import permutation_importance
             r = permutation_importance(model, X_scaled, y, scoring="roc_auc",
@@ -207,7 +207,7 @@ def explain_saliency(model, imgs, y, p_final, thr, out_dir, summary, n=8):
     fig.savefig(os.path.join(out_dir, "saliency_montage.png"), dpi=110)
     plt.close(fig)
 
-    # Mean saliency magnitude for real vs AI (attention comparison).
+    # Mean saliency magnitude for real vs AI
     real_idx = np.where(y == 0)[0][:24]
     ai_idx = np.where(y == 1)[0][:24]
     real_m = float(np.mean([_saliency_map(model, np.ascontiguousarray(imgs[j]))[1].mean()
@@ -289,7 +289,7 @@ def explain_fp_fn(imgs, feats, y, p_final, thr, out_dir, summary):
             "mean_spectral_feat": round(float(feats[msk][:, spec].mean()), 4)}
     summary["group_stats"] = grp_stats
 
-    # Example montage of the worst FP and FN (highest-confidence mistakes).
+    # Example montage of the worst FP and FN (highest-confidence mistakes)
     fp_idx = np.where(groups["FP"])[0]
     fn_idx = np.where(groups["FN"])[0]
     fp_idx = fp_idx[np.argsort(p_final[fp_idx])[::-1]][:4] if len(fp_idx) else fp_idx
