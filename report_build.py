@@ -76,7 +76,7 @@ def build():
                 from PIL import Image as PILImage
                 iw, ih = PILImage.open(fpath).size
                 maxw = 6.4 * inch
-                maxh = 3.1 * inch
+                maxh = 5.0 * inch
                 scale = min(maxw / iw, maxh / ih)
                 story.append(Image(fpath, iw * scale, ih * scale))
                 if alt:
