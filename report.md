@@ -8,10 +8,10 @@ reproducible (fixed seed 0), retraining within the Appendix-C time budget, and a
 below were produced in the Appendix-A Docker image (`python:3.11-slim` + CPU
 `torch 2.5.1`, `--cpus 8`).
 
-**Dataset (cleaned):** train 29,376 (4,887 real / 24,489 AI), calibration 1,924,
+**Cleaned Dataset:** train 29,376 (4,887 real / 24,489 AI), calibration 1,924,
 validation 1,124, calibration_augmented 1,924, validation_augmented 1,124.
 
-**Headline results (Docker-validated):**
+**Headline results from Docker:**
 
 | Task | Split | recall_ai | FPR_real | Gate (≤20%) | Aim |
 |------|-------|-----------|----------|-------------|-----|
@@ -21,7 +21,7 @@ validation 1,124, calibration_augmented 1,924, validation_augmented 1,124.
 
 ---
 
-## 1.1 Data exploration and cleaning (15 pts)
+## 1.1 Data exploration and cleaning
 
 `clean.py` streams the parquet shards in two passes: (1) a label + SHA-1 byte-hash
 pass that always completes, and (2) a deadline-bounded decode/metadata pass. It
@@ -30,14 +30,14 @@ manifest (`artifacts/clean/clean_manifest.parquet`). Rows are dropped only for
 exact duplicates (312 found), undecodable bytes, or degeneracy (min-side < 32 px
 or aspect > 5); 29,376 of 29,688 rows are kept.
 
-**Key finding — a trivial shortcut.** AI images are *uniformly* 320×320 square,
+An important finding is that AI images are uniformly 320×320 square,
 ~25 KB; real images are larger, non-square (mean aspect ≈ 1.4) and ~47 KB. A
 classifier could separate the classes perfectly from raw size/aspect/bytes alone,
 but this signal will not hold on a realistic holdout. **Mitigation:** every image
 is square-resized to 128×128 before any modelling, which removes the resolution
 shortcut and forces the models to use image content.
 
-## 1.2 Modelling under a false-positive constraint (35 pts)
+## 1.2 Modelling under a false-positive constraint
 
 **Objective:** maximise `recall_ai` subject to `FPR_real ≤ 20%`. The decision
 threshold on P(ai) is **calibrated automatically on `calibration/`** and the hard
@@ -52,7 +52,7 @@ the high-pass noise residual, summarised as a 16-bin radial spectrum plus
 peakiness/kurtosis, including per-channel terms. This targets the periodic
 high-frequency artefacts that GAN/diffusion up-samplers leave behind.
 
-**Two model families (≥2 required).**
+**Two model families.**
 - *Classical:* LogisticRegression, GradientBoosting and **HistGradientBoosting**
   on the standardised features (class-weighted for the ~17% real / 83% AI imbalance).
 - *CNN from scratch:* the Appendix-B architecture **plus BatchNorm and dropout**.
@@ -75,7 +75,7 @@ deployed validation FPR (0.192) stays under the gate.
 
 ![Task 1.2 — classical feature importance (red = spectral, blue = content)](solution/artifacts/task02/explain/feature_importance.png)
 
-## 1.3 Augmentation and robustness (30 pts)
+## 1.3 Augmentation and robustness
 
 **Goal:** stay accurate when images are scaled, compressed, blurred or noised —
 `recall_ai ≥ 0.6` on `validation_augmented/` under the same FPR gate, continuing
@@ -107,7 +107,7 @@ The augmented calibration gap runs *conservative* (validation_augmented FPR land
 below the calibration target), so here we calibrate at the full 20% budget to avoid
 leaving recall on the table — the mirror image of Task 2.
 
-## 1.4 Explainability (20 pts)
+## 1.4 Explainability
 
 `explain.py` produces, for the deployed ensemble: (a) **feature importance**
 (permutation / ROC-AUC) grouped into spectral vs content; (b) **CNN saliency** maps
@@ -115,7 +115,7 @@ leaving recall on the table — the mirror image of Task 2.
 statistics; (e) **real-vs-AI** mean-saliency comparison. Figures are in
 `artifacts/task0X/explain/`.
 
-**What the explanations reveal — used critically.**
+**What the explanations reveal.**
 - The spectral fingerprint is powerful but only a *part* of the decision: it carries
   **33.8%** of the classical model's importance in Task 2. After augmentation
   training (Task 3) this share **drops to 24.3%** — direct evidence that the robust
