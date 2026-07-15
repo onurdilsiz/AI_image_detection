@@ -1,5 +1,10 @@
 # AMLS 2026 — AI-Generated Image Detection
 ### Project report
+**Name:** Elif Nur Deniz  |  **Student ID:** 0527904
+
+**Name:** Onur Dilsiz  |  **Student ID:** 0527910
+
+**Name:** Gamze Kantar  |  **Student ID:** 0515778
 
 **Task:** binary classification, `real` (0) vs `ai_generated` (1); the five AI source
 classes are merged into class 1. **Constraints:** CPU-only, internet-free,
@@ -127,11 +132,15 @@ statistics; (e) **real-vs-AI** mean-saliency comparison. Figures are in
   plausibly still reflects spectral cues, which is exactly the behaviour that
   augmentation in Task 3 is designed to reduce.
 
-![Task 1.4 — CNN saliency on TP/FP/TN/FN validation samples](solution/artifacts/task02/explain/saliency_montage.png)
+![Task 1.4 — CNN saliency on TP/FP/TN/FN validation samples (1/2)](solution/artifacts/task02/explain/saliency_montage_top.png)
+
+![Task 1.4 — CNN saliency on TP/FP/TN/FN validation samples (2/2)](solution/artifacts/task02/explain/saliency_montage_bottom.png)
 
 ![Task 1.4 — occlusion sensitivity: red regions contribute most to P(ai)](solution/artifacts/task02/explain/occlusion.png)
 
-![Task 1.4 — highest-confidence FP/FN examples](solution/artifacts/task02/explain/fp_fn_examples.png)
+![Task 1.4 — highest-confidence FP/FN examples (1/2)](solution/artifacts/task02/explain/fp_fn_examples_left.png)
+
+![Task 1.4 — highest-confidence FP/FN examples (2/2)](solution/artifacts/task02/explain/fp_fn_examples_right.png)
 
 ## Reproducibility, limitations and risks
 
